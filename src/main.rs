@@ -1,6 +1,44 @@
 use std::io::{self, Write};
-
 use clap::{ArgGroup, Parser};
+
+//! # Base64 Encoder/Decoder
+//!
+//! This program encodes and decodes files using the Base64 algorithm.
+//!
+//! ## Encoding Algorithm
+//!
+//! 1. The input is processed in chunks of **3 bytes** (24 bits).
+//! 2. Each 24-bit block is split into **4 groups of 6 bits**.
+//! 3. Each 6-bit group is mapped to a printable character using the Base64
+//!    conversion table:
+//!    - `A–Z` → values 0–25
+//!    - `a–z` → values 26–51
+//!    - `0–9` → values 52–61
+//!    - `+`   → 62
+//!    - `/`   → 63
+//! 4. If the input length isn’t divisible by 3, padding is added:
+//!    - 1 leftover byte → output 2 Base64 characters + `==`
+//!    - 2 leftover bytes → output 3 Base64 characters + `=`
+//!
+//! Example: `Man` → `TWFu`
+//!
+//! ## Decoding Algorithm
+//!
+//! 1. Input characters are read in **groups of 4** (each representing 6 bits).
+//! 2. Each Base64 symbol is converted back into its **6-bit value** using a
+//!    reverse lookup table.
+//! 3. The 4 groups of 6 bits (24 bits total) are recombined into **3 bytes**.
+//! 4. If the input contained padding (`=`), the appropriate number of bytes
+//!    (1 or 2) is restored instead of 3.
+//!
+//! Example: `TWFu` → `Man`
+//!
+//! ## Notes
+//! - Whitespace is ignored in decode mode.
+//! - Padding is required for valid Base64 but is handled automatically.
+//!
+//! This is a simplified reference implementation — no streaming, just in-memory.
+
 
 #[derive(Parser, Debug)]
 #[command(name = "base64", about = "Encode/decode files in Base64", long_about = None)]
